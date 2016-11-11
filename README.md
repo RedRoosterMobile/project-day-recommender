@@ -5,10 +5,10 @@ Installation instructions
 
 Mac:
 
-* homebrew install python
+* brew install python
 * Spark! follow tutorial: https://www.dataquest.io/blog/pyspark-installation-guide/
 * extract to home directory
-* homebrew install sbt
+* brew install sbt
 * Navigate to the directory you unzipped Spark
 * sbt assembly # don't mind error messages
 * test: bin/pyspark

@@ -1,30 +1,34 @@
 import os
-# os.environ['PYSPARK_SUBMIT_ARGS'] = "--master mymaster --total-executor 2 --conf "spark.driver.extraJavaOptions=-Dhttp.proxyHost=proxy.mycorp.com-Dhttp.proxyPort=1234 -Dhttp.nonProxyHosts=localhost|.mycorp.com|127.0.0.1 -Dhttps.proxyHost=proxy.mycorp.com -Dhttps.proxyPort=1234 -Dhttps.nonProxyHosts=localhost|.mycorp.com|127.0.0.1 pyspark-shell"
+
+# funny 'find spark' path hack
 import findspark
 findspark.init()
+
 from flask import Blueprint
 main = Blueprint('main', __name__)
 
+# still needed?
 import json
+
 from engine import RecommendationEngine
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 @main.route("/<int:user_id>/ratings/top/<int:count>", methods=["GET"])
 def top_ratings(user_id, count):
     logger.debug("User %s TOP ratings requested", user_id)
     top_ratings = recommendation_engine.get_top_ratings(user_id,count)
-    return json.dumps(top_ratings)
+    return jsonify(top_ratings)
 
 @main.route("/<int:user_id>/ratings/<int:movie_id>", methods=["GET"])
 def movie_ratings(user_id, movie_id):
     logger.debug("User %s rating requested for movie %s", user_id, movie_id)
     ratings = recommendation_engine.get_ratings_for_movie_ids(user_id, [movie_id])
-    return json.dumps(ratings)
+    return jsonify(ratings)
 
 
 @main.route("/<int:user_id>/ratings", methods = ["POST"])
@@ -37,7 +41,7 @@ def add_ratings(user_id):
     # add them to the model using then engine API
     recommendation_engine.add_ratings(ratings)
 
-    return json.dumps(ratings)
+    return jsonify(ratings)
 
 
 def create_app(spark_context, dataset_path):

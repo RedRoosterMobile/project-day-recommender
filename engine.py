@@ -43,6 +43,9 @@ class RecommendationEngine:
         """
         predicted_RDD = self.model.predictAll(user_and_movie_RDD)
         predicted_rating_RDD = predicted_RDD.map(lambda x: (x.product, x.rating))
+        # second line of this comand takes 0.6 seconds and 1300kb
+        # worth opimizing.. and understanding!
+        # somehow remove numRatings, take it out of account?, as we dont' need the output, or do we?
         predicted_rating_title_and_count_RDD = \
             predicted_rating_RDD.join(self.movies_titles_RDD).join(self.movies_rating_counts_RDD)
         predicted_rating_title_and_count_RDD = \
@@ -111,12 +114,13 @@ class RecommendationEngine:
         self.__count_and_average_ratings()
 
         # Train the model
-        numBlocks is the number of blocks used to parallelize computation (set to -1 to auto-configure).
+
 
 
         # dunno yet..
         # implicitPrefs specifies whether to use the explicit feedback ALS variant or one adapted for implicit feedback data.
         # alpha is a parameter applicable to the implicit feedback variant of ALS that governs the baseline confidence in preference observations.
+        # numBlocks is the number of blocks used to parallelize computation (set to -1 to auto-configure).
 
         # rank is the number of latent factors in the model.
         # FIXME: wtf does that mean, number of genres? nope, 19 genres in given data set

@@ -1,11 +1,15 @@
 import os
-from pyspark.mllib.recommendation import ALS
+from pyspark.mllib.recommendation import ALS, MatrixFactorizationModel
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import math
 
+# Another thing we want to do, is give recommendations of movies with a
+# certain minimum number of ratings.
+# For that, we need to count the number of ratings per movie.
 def get_counts_and_averages(ID_and_ratings_tuple):
     """Given a tuple (movieID, ratings_iterable)
     returns (movieID, (ratings_count, ratings_avg))
@@ -13,11 +17,14 @@ def get_counts_and_averages(ID_and_ratings_tuple):
     nratings = len(ID_and_ratings_tuple[1])
     return ID_and_ratings_tuple[0], (nratings, float(sum(x for x in ID_and_ratings_tuple[1]))/nratings)
 
+# TODO:
+# filtering: recommendations by genre
 
 class RecommendationEngine:
     """A movie recommendation engine
     """
 
+    # gets called when set in memory has to be recalulated
     def __count_and_average_ratings(self):
         """Updates the movies ratings counts from
         the current data self.ratings_RDD
@@ -32,8 +39,16 @@ class RecommendationEngine:
         """Train the ALS model with the current dataset
         """
         logger.info("Training the ALS model...")
+        # http://spark.apache.org/docs/latest/api/python/pyspark.ml.html?highlight=als#pyspark.ml.recommendation.ALS
+        # class pyspark.ml.recommendation.ALS
+        # https://github.com/apache/spark/blob/master/python/pyspark/ml/recommendation.py
+        # Ideally, we want to try a large number of combinations of them in order to find
+        # the best one.
+        # https://databricks-training.s3.amazonaws.com/movie-recommendation-with-mllib.html#training-using-als
         self.model = ALS.train(self.ratings_RDD, self.rank, seed=self.seed,
-                               iterations=self.iterations, lambda_=self.regularization_parameter)
+                               iterations=self.iterations, lambda_=self.regularization_parameter, blocks = self.num_blocks)
+
+
         logger.info("ALS model built!")
 
 
@@ -42,10 +57,17 @@ class RecommendationEngine:
         Returns: an RDD with format (movieTitle, movieRating, numRatings)
         """
         predicted_RDD = self.model.predictAll(user_and_movie_RDD)
+        predictions = predicted_RDD.map(lambda r: ((r[0], r[1]), r[2]))
         predicted_rating_RDD = predicted_RDD.map(lambda x: (x.product, x.rating))
+
+        # calculate RMSE with ratings from file and predictions
+        rates_and_preds = self.ratings_RDD.map(lambda r: ((int(r[0]), int(r[1])), float(r[2]))).join(predictions)
+        error = math.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
+        print '#########  For this data the RMSE is %s' % (error)
+        #logger.info("RMSE")
+        #logger.info(error)
         # second line of this comand takes 0.6 seconds and 1300kb
         # worth opimizing.. and understanding!
-        # somehow remove numRatings, take it out of account?, as we dont' need the output, or do we?
         predicted_rating_title_and_count_RDD = \
             predicted_rating_RDD.join(self.movies_titles_RDD).join(self.movies_rating_counts_RDD)
         predicted_rating_title_and_count_RDD = \
@@ -109,6 +131,7 @@ class RecommendationEngine:
         movies_raw_data_header = movies_raw_RDD.take(1)[0]
         self.movies_RDD = movies_raw_RDD.filter(lambda line: line!=movies_raw_data_header)\
             .map(lambda line: line.split(",")).map(lambda tokens: (int(tokens[0]),tokens[1],tokens[2])).cache()
+        # genres are NOT taken into account
         self.movies_titles_RDD = self.movies_RDD.map(lambda x: (int(x[0]),x[1])).cache()
         # Pre-calculate movies ratings counts
         self.__count_and_average_ratings()
@@ -116,21 +139,31 @@ class RecommendationEngine:
         # Train the model
 
 
+        # https://github.com/apache/spark/blob/master/examples/src/main/scala/org/apache/spark/examples/mllib/RecommendationExample.scala
 
         # dunno yet..
         # implicitPrefs specifies whether to use the explicit feedback ALS variant or one adapted for implicit feedback data.
-        # alpha is a parameter applicable to the implicit feedback variant of ALS that governs the baseline confidence in preference observations.
-        # numBlocks is the number of blocks used to parallelize computation (set to -1 to auto-configure).
 
+        # alpha is a parameter applicable to the implicit feedback variant of ALS that governs the baseline confidence in preference observations.
+        # alpha is also known as the learning rate: 'step size downhill to minimum'
+        self.alpha = 1.0
+        # numBlocks is the number of blocks used to parallelize computation (set to -1 to auto-configure).
+        self.num_blocks = -1
         # rank is the number of latent factors in the model.
-        # FIXME: wtf does that mean, number of genres? nope, 19 genres in given data set
         # http://de.slideshare.net/sscdotopen/latent-factor-models-for-collaborative-filtering
         # conclusion: figure out RMSE like here:
         # https://www.codementor.io/spark/tutorial/building-a-recommender-with-apache-spark-python-example-app-part1
         self.rank = 8
+        # what?
         self.seed = 5L
         # iterations is the number of iterations to run.
         self.iterations = 10
         # lambda specifies the regularization parameter in ALS.
         self.regularization_parameter = 0.1
         self.__train_model()
+
+        # save model on disk
+        # self.model.save(self.sc, "/tmp/myCollaborativeFilter")
+
+        # load model from disk
+        # sameModel = MatrixFactorizationModel.load(sc, "/tmp/myCollaborativeFilter")

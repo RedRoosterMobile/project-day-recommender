@@ -12,6 +12,8 @@ Mac:
 * Navigate to the directory you unzipped Spark
 * sbt assembly # don't mind error messages
 * test: bin/pyspark
+* go to this folder and run:
+* pip install -r requirements.txt
 
 
 # A scalable on-line movie recommender using Spark and Flask  

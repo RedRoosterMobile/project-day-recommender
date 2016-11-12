@@ -6,14 +6,33 @@ Installation instructions
 Mac:
 
 * brew install python
+
 * Spark! follow tutorial: https://www.dataquest.io/blog/pyspark-installation-guide/
 * extract to home directory
+* set $SPARK_HOME to spark-folder
 * brew install sbt
 * Navigate to the directory you unzipped Spark
 * sbt assembly # don't mind error messages
 * test: bin/pyspark
-* go to this folder and run:
+
+* OR
+
+* brew install apache-spark
+* cd /usr/local/Cellar/apache-spark/2.0.2/libexec
+* cd conf
+* cp log4j.properties.template  log4j.properties
+* nano log4j.properties
+* find line log4j.rootCategory=INFO and change it to ERROR
+* save
+
+* cd path-you-checked-out-python-code
 * pip install -r requirements.txt
+* python server.py
+
+# stuff
+
+* add ratings while running server: `curl --data-binary @user_ratings.file http://0.0.0.0:5432/1/ratings`
+* get recommendations via shell:    `curl -i http://0.0.0.0:5432/2/ratings/top/5`
 
 
 # A scalable on-line movie recommender using Spark and Flask  

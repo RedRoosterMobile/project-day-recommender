@@ -43,8 +43,10 @@ pep8==1.6.2
 pika==0.9.14
 Pillow==2.7.0
 protobuf==2.6.1
+psutil==5.0.0
 pyasn1==0.1.8
 Pygments==2.0.2
+PyInstaller==3.2
 pyparsing==2.0.3
 python-dateutil==2.4.2
 python-gflags==2.0

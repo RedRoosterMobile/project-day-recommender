@@ -57,10 +57,10 @@ class RecommendationEngine:
         Returns: an RDD with format (movieTitle, movieRating, numRatings)
         """
         predicted_RDD = self.model.predictAll(user_and_movie_RDD)
-        predictions = predicted_RDD.map(lambda r: ((r[0], r[1]), r[2]))
         predicted_rating_RDD = predicted_RDD.map(lambda x: (x.product, x.rating))
 
-        # calculate RMSE with ratings from file and predictions
+        # calculate RMSE with ratings from file and predictions (takes at least a second of request time)
+        predictions = predicted_RDD.map(lambda r: ((r[0], r[1]), r[2]))
         rates_and_preds = self.ratings_RDD.map(lambda r: ((int(r[0]), int(r[1])), float(r[2]))).join(predictions)
         error = math.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
         print '#########  For this data the RMSE is %s' % (error)
@@ -137,6 +137,7 @@ class RecommendationEngine:
         self.__count_and_average_ratings()
 
         # Train the model
+        
 
 
         # https://github.com/apache/spark/blob/master/examples/src/main/scala/org/apache/spark/examples/mllib/RecommendationExample.scala
@@ -146,6 +147,8 @@ class RecommendationEngine:
 
         # alpha is a parameter applicable to the implicit feedback variant of ALS that governs the baseline confidence in preference observations.
         # alpha is also known as the learning rate: 'step size downhill to minimum'
+        # TODO: find out where to stick this
+        # small slow, too large -> fail to converge and diverge instead
         self.alpha = 1.0
         # numBlocks is the number of blocks used to parallelize computation (set to -1 to auto-configure).
         self.num_blocks = -1

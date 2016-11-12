@@ -6,6 +6,7 @@ from pyspark import SparkContext, SparkConf
 def init_spark_context():
     # load spark context
     conf = SparkConf().setAppName("project_day_video_recommendation_server")
+
     # IMPORTANT: pass aditional Python modules to each worker
     sc = SparkContext(conf=conf, pyFiles=['engine.py', 'app.py'])
 

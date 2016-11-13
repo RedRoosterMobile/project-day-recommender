@@ -24,7 +24,13 @@ def top_ratings(user_id, count):
     top_ratings = recommendation_engine.get_top_ratings(user_id,count)
     # filter by genres idea
     # data.filter(lambda x: x[index_of_genre] == 'math')
-    return jsonify(top_ratings)
+
+    callbackFunction = request.args.get('callback')
+    if callbackFunction:
+        # can be called from anwhere via: $.getScript("http://0.0.0.0:5432/12/ratings/top/25?callback=parseTopRatings");
+        return callbackFunction + '(' + json.dumps(top_ratings) + ');'
+    else:
+       return jsonify(top_ratings)
 
 @main.route("/<int:user_id>/ratings/<int:movie_id>", methods=["GET"])
 def movie_ratings(user_id, movie_id):

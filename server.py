@@ -3,6 +3,9 @@ from paste.translogger import TransLogger
 from app import create_app
 from pyspark import SparkContext, SparkConf
 
+# debugging
+import pdb
+
 def init_spark_context():
     # load spark context
     conf = SparkConf().setAppName("project_day_video_recommendation_server")
@@ -31,12 +34,14 @@ def run_server(app):
 
     # Start the CherryPy WSGI web server
     cherrypy.engine.start()
-    cherrypy.engine.block()
+    cherrypy.engine.block() # keep on running..
 
-
+# debug: python -m pdb server.py
 if __name__ == "__main__":
     # Init spark context and load libraries
     sc = init_spark_context()
+
+    # TODO: command line argument?
     dataset_path = os.path.join('datasets', 'ml-latest')
     app = create_app(sc, dataset_path)
 

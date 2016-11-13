@@ -59,17 +59,23 @@ class RecommendationEngine:
         predicted_RDD = self.model.predictAll(user_and_movie_RDD)
         predicted_rating_RDD = predicted_RDD.map(lambda x: (x.product, x.rating))
 
+        # ########   PUT BACK IN WHEN DEVELOPING!               ########
+        # ########   R-M-S-E Root Mean Square Error             ########
+        # ########   will tell you how accurate the guess is    ########
+
         # calculate RMSE with ratings from file and predictions (takes at least a second of request time)
-        predictions = predicted_RDD.map(lambda r: ((r[0], r[1]), r[2]))
-        rates_and_preds = self.ratings_RDD.map(lambda r: ((int(r[0]), int(r[1])), float(r[2]))).join(predictions)
-        error = math.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
-        print '#########  For this data the RMSE is %s' % (error)
-        #logger.info("RMSE")
-        #logger.info(error)
-        # second line of this comand takes 0.6 seconds and 1300kb
-        # worth opimizing.. and understanding!
+        # predictions = predicted_RDD.map(lambda r: ((r[0], r[1]), r[2]))
+        # rates_and_preds = self.ratings_RDD.map(lambda r: ((int(r[0]), int(r[1])), float(r[2]))).join(predictions)
+        # error = math.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
+        # print '#########  For this data the RMSE is %s' % (error)
+
         predicted_rating_title_and_count_RDD = \
             predicted_rating_RDD.join(self.movies_titles_RDD).join(self.movies_rating_counts_RDD)
+
+        # example to use the debugger:
+        # import pdb; pdb.set_trace()
+
+        # line of this comand takes 0.6 seconds and 1300kb
         predicted_rating_title_and_count_RDD = \
             predicted_rating_title_and_count_RDD.map(lambda r: (r[1][0][1], r[1][0][0], r[1][1]))
 
@@ -131,13 +137,17 @@ class RecommendationEngine:
         movies_raw_data_header = movies_raw_RDD.take(1)[0]
         self.movies_RDD = movies_raw_RDD.filter(lambda line: line!=movies_raw_data_header)\
             .map(lambda line: line.split(",")).map(lambda tokens: (int(tokens[0]),tokens[1],tokens[2])).cache()
-        # genres are NOT taken into account
+
         self.movies_titles_RDD = self.movies_RDD.map(lambda x: (int(x[0]),x[1])).cache()
+        # genres are NOT taken into account
+        # keep for later filtering
+        # self.movies_genres_RDD = self.movies_RDD.map(lambda x: (int(x[0]),x[2])).cache()
+
         # Pre-calculate movies ratings counts
         self.__count_and_average_ratings()
 
         # Train the model
-        
+
 
 
         # https://github.com/apache/spark/blob/master/examples/src/main/scala/org/apache/spark/examples/mllib/RecommendationExample.scala

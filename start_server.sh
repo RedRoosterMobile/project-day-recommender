@@ -10,8 +10,14 @@
 
 # via homebrew
 # TODO: org/apache/spark/log4j-defaults.properties adjust this make logging better
-spark-submit --master local[4] --total-executor-cores 4 --executor-memory 2g server.py
+spark-submit --master local[2] --total-executor-cores 4 --executor-memory 2g server.py
 
 
-# Note that we run with local[4, meaning two threads - which represents "minimal" parallelism,
+# Note that we run with local[2, meaning two threads - which represents "minimal" parallelism,
 # which can help detect bugs that only exist when we run in a distributed context.
+
+
+
+# scala examples from spark download
+# park-submit --class org.apache.spark.examples.mllib.RecommendationExample --master local[2] ./examples/jars/spark-examples_2.11-2.0.1.jar
+# park-submit --class org.apache.spark.examples.mllib.JavaRecommendationExample --master local[2] ./examples/jars/spark-examples_2.11-2.0.1.jar

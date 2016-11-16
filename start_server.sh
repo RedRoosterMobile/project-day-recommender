@@ -10,7 +10,8 @@
 
 # via homebrew
 # TODO: org/apache/spark/log4j-defaults.properties adjust this make logging better
-spark-submit --master local[2] --total-executor-cores 4 --executor-memory 2g server.py
+# spark-submit --master local[2] --total-executor-cores 4 --executor-memory 4g server.py
+spark-submit --master local[4] --driver-memory 4g --executor-memory 4g server.py
 
 
 # Note that we run with local[2, meaning two threads - which represents "minimal" parallelism,

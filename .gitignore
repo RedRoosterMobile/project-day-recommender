@@ -8,3 +8,8 @@ ipython_notebook_spark.out
 **/*.zip
 **/models/
 venv/
+.idea/
+build/
+datasets/sofatutor/
+dist/
+server.spec

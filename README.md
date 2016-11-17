@@ -5,7 +5,7 @@ Installation instructions
 
 Mac:
 
-* brew install python
+* brew install python # automatically installs package-manager pip
 
 * Spark! follow tutorial: https://www.dataquest.io/blog/pyspark-installation-guide/
 * extract to home directory
@@ -22,12 +22,17 @@ Mac:
 * cd conf
 * cp log4j.properties.template  log4j.properties
 * nano log4j.properties
-* find line log4j.rootCategory=INFO and change it to ERROR
+* find line log4j.rootCategory=INFO and change it to ERROR or WARN
 * save
 
-* cd path-you-checked-out-python-code
-* pip install -r requirements.txt
-* python server.py
+* cd path-your-checked-out-python-code
+* pip install --upgrade pip       # optional
+* pip install virtualenv          # tool for project only dependencies
+* virtualenv venv                 # create a virtual environment
+* source venv/bin/activate        # activate virtual environment
+* pip install -r requirements.txt # install packages
+* python server.py                # run server
+* (decativate)                    # deactivate virtual env
 
 # stuff
 
